@@ -11,15 +11,20 @@ import (
 )
 
 var (
+	// ErrTimeout is returned if a read times out.
 	ErrTimeout = errors.New("timeout")
+	// ErrMissing is returned if a value is requested without allowing for a
+	// timeout.
 	ErrMissing = errors.New("missing")
 )
 
+// KV represents a key/value pair.
 type KV struct {
 	K uint64
 	V float64
 }
 
+// Client holds all the state necessary for interacting with a counterd server.
 type Client struct {
 	m sync.RWMutex
 	s net.Conn
@@ -28,6 +33,7 @@ type Client struct {
 	c []chan KV
 }
 
+// Dial connects to a counterd service at a specified address.
 func Dial(addr string) (*Client, error) {
 	s, err := net.Dial("tcp4", addr)
 	if err != nil {
@@ -80,14 +86,19 @@ func (c *Client) read() {
 	}
 }
 
+// Monitor registers a channel to receive updates when a notification comes in
+// from the counterd server.
 func (c *Client) Monitor(ch chan KV) {
 	c.c = append(c.c, ch)
 }
 
+// Close closes the client.
 func (c *Client) Close() error {
 	return c.s.Close()
 }
 
+// Increment adds a (potentially negative) value to a counter on the server,
+// scheduled to be reverted after a certain duration.
 func (c *Client) Increment(k uint64, v float64, t time.Duration) error {
 	return types.WriteMessage(c.s, types.IncrementMessage{
 		Key: k,
@@ -96,18 +107,24 @@ func (c *Client) Increment(k uint64, v float64, t time.Duration) error {
 	})
 }
 
+// Subscribe makes a request to the server to begin sending update
+// notifications for a particular key.
 func (c *Client) Subscribe(k uint64) error {
 	return types.WriteMessage(c.s, types.SubscribeMessage{
 		Key: k,
 	})
 }
 
+// Unsubscribe makes a request to the server to stop sending update
+// notifications for a particular key.
 func (c *Client) Unsubscribe(k uint64) error {
 	return types.WriteMessage(c.s, types.UnsubscribeMessage{
 		Key: k,
 	})
 }
 
+// Read returns what the client has cached locally for a particular key,
+// or ErrMissing if there's no cached value.
 func (c *Client) Read(k uint64) (float64, error) {
 	c.m.RLock()
 	defer c.m.RUnlock()
@@ -120,6 +137,8 @@ func (c *Client) Read(k uint64) (float64, error) {
 	return v, nil
 }
 
+// ReadOrQuery does what it sounds like it does. It either returns the locally
+// cached value of a particular key, or it makes a request to the server.
 func (c *Client) ReadOrQuery(k uint64, t time.Duration) (float64, error) {
 	v, err := c.Read(k)
 	if err == nil {

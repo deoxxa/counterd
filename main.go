@@ -1,3 +1,7 @@
+// Command counterd provides a persistent, durable, centralised counter
+// service with a simple, efficient binary protocol. It exists specifically
+// to support the use case of a counter with built in time-to-live logic for
+// counter updates.
 package main
 
 import (
