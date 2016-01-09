@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"hash/fnv"
 	"io"
 	"net"
 	"sync"
@@ -9,6 +10,12 @@ import (
 
 	"fknsrs.biz/p/counterd/types"
 )
+
+func fnvString(s string) uint64 {
+	h := fnv.New64()
+	h.Write([]byte(s))
+	return h.Sum64()
+}
 
 var (
 	// ErrTimeout is returned if a read times out.
@@ -107,6 +114,12 @@ func (c *Client) Increment(k uint64, v float64, t time.Duration) error {
 	})
 }
 
+// IncrementString is like Increment, but uses the FNV hash of a string as the
+// key.
+func (c *Client) IncrementString(k string, v float64, t time.Duration) error {
+	return c.Increment(fnvString(k), v, t)
+}
+
 // Subscribe makes a request to the server to begin sending update
 // notifications for a particular key.
 func (c *Client) Subscribe(k uint64) error {
@@ -115,12 +128,24 @@ func (c *Client) Subscribe(k uint64) error {
 	})
 }
 
+// SubscribeString is like Subscribe, but uses the FNV hash of a string as the
+// key.
+func (c *Client) SubscribeString(k string) error {
+	return c.Subscribe(fnvString(k))
+}
+
 // Unsubscribe makes a request to the server to stop sending update
 // notifications for a particular key.
 func (c *Client) Unsubscribe(k uint64) error {
 	return types.WriteMessage(c.s, types.UnsubscribeMessage{
 		Key: k,
 	})
+}
+
+// UnsubscribeString is like Unsubscribe, but uses the FNV hash of a string as
+// the key.
+func (c *Client) UnsubscribeString(k string) error {
+	return c.Unsubscribe(fnvString(k))
 }
 
 // Read returns what the client has cached locally for a particular key,
@@ -135,6 +160,11 @@ func (c *Client) Read(k uint64) (float64, error) {
 	}
 
 	return v, nil
+}
+
+// ReadString is like Read, but uses the FNV hash of a string as the key.
+func (c *Client) ReadString(k string) (float64, error) {
+	return c.Read(fnvString(k))
 }
 
 // ReadOrQuery does what it sounds like it does. It either returns the locally
@@ -161,4 +191,10 @@ func (c *Client) ReadOrQuery(k uint64, t time.Duration) (float64, error) {
 	case <-time.After(t):
 		return 0, ErrTimeout
 	}
+}
+
+// ReadOrQueryString is like ReadOrQuery, but uses the FNV hash of a string as
+// the key.
+func (c *Client) ReadOrQueryString(k string, t time.Duration) (float64, error) {
+	return c.ReadOrQuery(fnvString(k), t)
 }
