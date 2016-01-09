@@ -57,9 +57,10 @@ type kv struct {
 }
 
 var (
-	addr     = flag.String("addr", ":2098", "Address to listen on.")
-	logLevel = flag.String("log_level", "info", "Minimum log level. Options are error, warn, info, debug.")
-	dbFile   = flag.String("database_file", "counterd.db", "File to store the persistent database.")
+	addr          = flag.String("addr", ":2098", "Address to listen on.")
+	logLevel      = flag.String("log_level", "info", "Minimum log level. Options are error, warn, info, debug.")
+	dbFile        = flag.String("database_file", "counterd.db", "File to store the persistent database.")
+	checkInterval = flag.Duration("check_interval", time.Second, "Interval at which to attempt applying deltas.")
 )
 
 func main() {
@@ -178,7 +179,7 @@ func main() {
 				panic(err)
 			}
 
-			time.Sleep(time.Second)
+			time.Sleep(*checkInterval)
 		}
 	}()
 
