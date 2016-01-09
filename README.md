@@ -1,7 +1,11 @@
 counterd
 ========
 
-[![GoDoc](https://godoc.org/fknsrs.biz/p/counterd?status.svg)](https://godoc.org/fknsrs.biz/p/counterd)
+[![GoDoc](https://godoc.org/fknsrs.biz/p/counterd?status.svg)](https://godoc.org/fknsrs.biz/p/counterd) - main command
+
+[![GoDoc](https://godoc.org/fknsrs.biz/p/counterd/types?status.svg)](https://godoc.org/fknsrs.biz/p/counterd/types) - protocol
+
+[![GoDoc](https://godoc.org/fknsrs.biz/p/counterd/client?status.svg)](https://godoc.org/fknsrs.biz/p/counterd/client) - client
 
 Overview
 --------
